@@ -21,7 +21,7 @@ jobs:
             - run: npm install --silent
             - run: npm run build
               env:
-                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+                  VITE_TENOR_KEY: ${{ keys.VITE_TENOR_KEY }}
             - run: npx electron-builder --win --publish=always
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +37,7 @@ jobs:
             - run: npm install --silent
             - run: npm run build
               env:
-                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+                  VITE_TENOR_KEY: ${{ keys.VITE_TENOR_KEY }}
             - run: npx electron-builder --mac --publish=always
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
             - run: npm install --silent
             - run: npm run build
               env:
-                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+                  VITE_TENOR_KEY: ${{ keys.VITE_TENOR_KEY }}
             - run: npx electron-builder --linux --publish=always
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
