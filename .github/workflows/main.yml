@@ -1,0 +1,56 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - 'v*'
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+    release-windows:
+        runs-on: windows-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - run: npm install --silent
+            - run: npm run build
+            - run: npx electron-builder --win --publish=always
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+
+    release-macos:
+        runs-on: macos-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - run: npm install --silent
+            - run: npm run build
+            - run: npx electron-builder --mac --publish=always
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+
+    release-linux:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - run: npm install --silent
+            - run: npm run build
+            - run: npx electron-builder --linux --publish=always
+              env:
+                  VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

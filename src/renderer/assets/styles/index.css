@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+@import './shad.css';
+
+:root {
+	overflow: hidden;
+	--accent-color: rgba(0, 200, 250, 0.75);
+	--accent-color-secondary: rgba(0, 175, 225, 0.75);
+	--back-transparent: rgba(10, 10, 10, 0.45);
+	user-select: none;
+}
+
+.statusBar {
+	-webkit-app-region: drag;
+}
+
+.statusBar button {
+	-webkit-app-region: no-drag;
+}
+
+.statusBar .enabled {
+	border: 1px solid var(--accent-color-secondary);
+	color: var(--accent-color);
+}
+
+.hoverable:hover {
+	border: 2px solid rgba(0, 247, 255, 0.8);
+	border-radius: 17px;
+	box-shadow: 0 0 20px rgba(17, 183, 224, 0.4);
+	transition: all 0.1s ease;
+}
+
+.hoverable:active {
+	scale: 0.98;
+	transition: all 0.1s ease;
+}
