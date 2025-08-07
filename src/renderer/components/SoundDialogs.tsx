@@ -36,9 +36,9 @@ export function AddSound({ onSubmit }: AddSoundProps) {
 					? await FileService.selectAudioFile()
 					: await FileService.selectImageFile()
 
-			if (filePath) {
+			if (filePath.data) {
 				const key = type === 'sound' ? 'soundSrc' : 'imageSrc'
-				updateSound({ [key]: filePath })
+				updateSound({ [key]: filePath.data })
 			}
 		} catch (error) {
 			useErrorHandler().handleError(error as Error, 'Failed to select file')
