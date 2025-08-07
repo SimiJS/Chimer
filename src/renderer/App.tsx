@@ -25,6 +25,8 @@ import {
 } from 'lucide-react'
 import { Downloader } from './pages/Download'
 
+window.name = 'Chimer'
+
 interface Page {
 	path: string
 	element: React.JSX.Element
@@ -70,7 +72,6 @@ function ShadBar({ routes }: { routes: Page[] }) {
 
 	// Initialize state on app mount
 	React.useEffect(() => {
-		window.name = 'Chimer'
 		const initializePinState = async () => {
 			const pinState = await window.api.getPinState()
 			setIsPinned(pinState)

@@ -40,7 +40,7 @@ export default function Home() {
 	const [selectionState, selectionActions] = useSelectionMode()
 	const fileOperations = useFileOperations()
 
-	// Local state
+	// Dialog state
 	const [dialogType, setDialogType] = useState<'sound' | 'group' | null>(null)
 	const [searchQuery, setSearchQuery] = useState('')
 

@@ -2,16 +2,16 @@ import { Button } from './ui/button'
 import { DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Input } from './ui/input'
 import { File, Image } from 'lucide-react'
-import { HotkeyRecorder } from './Components'
+import { HotkeyRecorder, TenorGif } from './Components'
 import { Soundcard } from './Soundcard'
 import { FileService } from '@/services/fileService'
 import { useErrorHandler } from '@/hooks/useErrorHandler'
 import { Sound } from '@/types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSound } from '@/hooks/useStores'
 
 const DEFAULT_SOUND: Sound = {
-	id: crypto.randomUUID(),
+	id: '',
 	name: '',
 	soundSrc: '',
 	imageSrc: '',
@@ -26,6 +26,10 @@ export function AddSound({ onSubmit }: AddSoundProps) {
 	const [sound, setSound] = useState<Sound>(DEFAULT_SOUND)
 	const [isRecording, setIsRecording] = useState(false)
 	const { playSound, stopSound, currentSound } = useSound()
+
+	useEffect(() => {
+		setSound({ ...DEFAULT_SOUND, id: crypto.randomUUID() })
+	}, [])
 
 	const updateSound = (updates: Partial<Sound>) => setSound((prev) => ({ ...prev, ...updates }))
 
@@ -50,7 +54,6 @@ export function AddSound({ onSubmit }: AddSoundProps) {
 		if (!sound.name.trim() || !sound.soundSrc.trim()) return
 
 		onSubmit(sound)
-		setSound(DEFAULT_SOUND)
 	}
 
 	const handleSoundPlay = () => {
@@ -94,6 +97,7 @@ export function AddSound({ onSubmit }: AddSoundProps) {
 							value={sound.imageSrc || ''}
 							onChange={(e) => updateSound({ imageSrc: e.target.value })}
 						/>
+						<TenorGif onSelect={(src) => updateSound({ imageSrc: src })} />
 						<Button type="button" onClick={() => handleFilePick('image')} size="icon">
 							<Image />
 						</Button>
