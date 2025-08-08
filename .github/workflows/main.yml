@@ -24,7 +24,6 @@ jobs:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
             - run: npx electron-builder --win --publish=always
               env:
-                  DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -42,7 +41,6 @@ jobs:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
             - run: npx electron-builder --mac --publish=always
               env:
-                  DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,6 +58,5 @@ jobs:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
             - run: npx electron-builder --linux --publish=always
               env:
-                  DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

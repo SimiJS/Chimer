@@ -277,9 +277,9 @@ export function discordRPC(): void | Status {
 				message: 'Discord RPC is already running.'
 			}
 		}
-		RPC.register(process.env.DISCORD_APP_ID!)
+		RPC.register('1386864810339340489')
 		rpcClient = new RPC.Client({ transport: 'ipc' })
-		rpcClient.login({ clientId: process.env.DISCORD_APP_ID! })
+		rpcClient.login({ clientId: '1386864810339340489' })
 
 		const startTimestamp = Math.floor(Date.now() / 1000)
 
