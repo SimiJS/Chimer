@@ -528,3 +528,22 @@ useSoundStore.subscribe(
 		DatabaseService.autoSave(currentDatabase, current.sounds, current.groups)
 	}
 )
+
+useSoundStore.subscribe(
+	(state) => state.audio.currentSound,
+	async (currentSound) => {
+		if (currentSound && useSettingsStore.getState().settings.discord) {
+			let largeImageKey = currentSound.imageSrc?.startsWith('http')
+				? currentSound.imageSrc
+				: undefined
+
+			window.api.setDiscordActivity({
+				details: 'Playing',
+				state: currentSound.name,
+				largeImageKey
+			})
+		} else if (!currentSound && useSettingsStore.getState().settings.discord) {
+			window.api.clearDiscordActivity()
+		}
+	}
+)

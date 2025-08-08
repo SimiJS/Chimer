@@ -24,6 +24,7 @@ import {
 	X
 } from 'lucide-react'
 import { Downloader } from './pages/Download'
+import { useSettingsStore } from './stores/settingsStore'
 
 window.name = 'Chimer'
 
@@ -77,6 +78,9 @@ function ShadBar({ routes }: { routes: Page[] }) {
 			setIsPinned(pinState)
 		}
 		initializePinState()
+		if (useSettingsStore.getState().settings?.discord) {
+			window.api.startDiscordRPC()
+		}
 	}, [])
 
 	return (

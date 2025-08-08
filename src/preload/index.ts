@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { Presence } from 'discord-rpc'
 
 const api = {
 	readData: async (filePath: string) => {
@@ -43,6 +44,18 @@ const api = {
 	},
 	setActionHotkeys: async (actionKeys: { action: string; hotkey: string }[]) => {
 		return await ipcRenderer.invoke('setActionHotkeys', actionKeys)
+	},
+	startDiscordRPC: async () => {
+		return await ipcRenderer.invoke('startDiscordRPC')
+	},
+	stopDiscordRPC: async () => {
+		return await ipcRenderer.invoke('stopDiscordRPC')
+	},
+	setDiscordActivity: async (activity: Presence) => {
+		return await ipcRenderer.invoke('setDiscordActivity', activity)
+	},
+	clearDiscordActivity: async () => {
+		return await ipcRenderer.invoke('clearDiscordActivity')
 	}
 }
 

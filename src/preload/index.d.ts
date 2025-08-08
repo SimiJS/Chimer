@@ -2,6 +2,8 @@ import { Status } from '@/types'
 import { ElectronAPI } from '@electron-toolkit/preload'
 import { StatSyncFn } from 'fs'
 import { SearchResult, VideoDetails } from 'youtube-search-api'
+import { Presence } from 'discord-rpc'
+
 declare global {
 	interface Window {
 		electron: ElectronAPI
@@ -20,6 +22,11 @@ declare global {
 			searchYoutube: (searchTerm: string) => Promise<Status>
 			previewYoutube: (videoId: string) => Promise<Buffer>
 			getYoutubeVideoData: (id: string) => Promise<Status>
+
+			startDiscordRPC: () => Promise<Status>
+			stopDiscordRPC: () => Promise<Status>
+			setDiscordActivity: (activity: Presence) => Promise<Status>
+			clearDiscordActivity: () => Promise<Status>
 		}
 	}
 }

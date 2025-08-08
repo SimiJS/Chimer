@@ -34,6 +34,7 @@ export interface Settings {
 		readonly name: string
 	}[]
 	currentDatabase: string
+	discord: boolean
 }
 
 export interface Status {

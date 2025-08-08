@@ -1,6 +1,6 @@
 import { Card, CardFooter, CardTitle } from './ui/card'
 import '@/assets/styles/components/soundcard.css'
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 
 interface SoundcardProps {
 	name: string
@@ -20,10 +20,30 @@ export const Soundcard = memo(function Soundcard({
 	hotkey = ''
 }: SoundcardProps) {
 	const [isHovered, setIsHovered] = useState(false)
+	const [imageUrl, setImageUrl] = useState<string | null>(null)
 
-	const cardStyle = imageSrc
+	useEffect(() => {
+		if (imageSrc && !imageSrc.startsWith('http')) {
+			window.api.readData(imageSrc).then((result) => {
+				if (result.success) {
+					setImageUrl(URL.createObjectURL(new Blob([result.data])))
+				} else {
+					console.error(`Failed to load image: ${result.message}`)
+				}
+			})
+		} else {
+			setImageUrl(imageSrc || null)
+		}
+		return () => {
+			if (imageUrl) {
+				URL.revokeObjectURL(imageUrl)
+			}
+		}
+	}, [imageSrc])
+
+	const cardStyle = imageUrl
 		? {
-				backgroundImage: `url(${imageSrc})`,
+				backgroundImage: `url(${imageUrl})`,
 				backgroundSize: 'cover',
 				backgroundPosition: 'center',
 				backgroundRepeat: 'no-repeat',

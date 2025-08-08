@@ -4,6 +4,8 @@ import fsExtra from 'fs'
 import { GetListByKeyword, GetVideoDetails } from 'youtube-search-api'
 import { Status } from './types'
 import ytdl from '@distube/ytdl-core'
+import RPC from 'discord-rpc'
+import 'dotenv/config'
 
 export function ipcHandlers(): void {
 	let currentSoundKeys: { soundId: string; hotkey: string }[] = []
@@ -48,7 +50,7 @@ export function ipcHandlers(): void {
 				return {
 					success: true,
 					message: 'File loaded successfully.',
-					data: Buffer.from(await response.arrayBuffer())
+					data: await response.arrayBuffer()
 				}
 			}
 
@@ -260,4 +262,69 @@ export function ipcHandlers(): void {
 			stream.on('error', (err: Error) => reject(err))
 		})
 	})
+
+	ipcMain.handle('startDiscordRPC', (_event): void => {
+		discordRPC()
+	})
+}
+
+let rpcClient: RPC.Client | null = null
+export function discordRPC(): void | Status {
+	try {
+		if (rpcClient) {
+			return {
+				success: false,
+				message: 'Discord RPC is already running.'
+			}
+		}
+		RPC.register(process.env.DISCORD_APP_ID!)
+		rpcClient = new RPC.Client({ transport: 'ipc' })
+		rpcClient.login({ clientId: process.env.DISCORD_APP_ID! })
+
+		const startTimestamp = Math.floor(Date.now() / 1000)
+
+		rpcClient.on('ready', () => {
+			rpcClient?.setActivity({
+				largeImageKey: 'chimer',
+				largeImageText: 'Chimer',
+				details: 'Idle',
+				startTimestamp: startTimestamp,
+				instance: false,
+				buttons: [{ label: 'Download Chimer', url: 'https://github.com/SimiJS/Chimer' }]
+			})
+		})
+		ipcMain.handle('setDiscordActivity', (_event, activity: RPC.Presence) => {
+			rpcClient?.setActivity({
+				...activity,
+				details: activity.details || '',
+				startTimestamp: activity.startTimestamp || startTimestamp,
+				buttons: activity.buttons || [
+					{ label: 'Download Chimer', url: 'https://github.com/SimiJS/Chimer' }
+				]
+			})
+		})
+
+		ipcMain.handle('clearDiscordActivity', () => {
+			rpcClient?.setActivity({
+				details: 'Idle',
+				largeImageKey: 'chimer',
+				largeImageText: 'Chimer',
+				startTimestamp: startTimestamp,
+				instance: false,
+				buttons: [{ label: 'Download Chimer', url: 'https://github.com/SimiJS/Chimer' }]
+			})
+		})
+
+		ipcMain.handle('stopDiscordRPC', () => {
+			if (rpcClient) {
+				rpcClient.destroy()
+				rpcClient = null
+			}
+		})
+	} catch (error) {
+		return {
+			success: false,
+			message: `An error occurred while starting Discord RPC: ${(error as Error).message}`
+		}
+	}
 }

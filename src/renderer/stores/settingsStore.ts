@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Settings } from '@/types'
 import { dataStore } from '@/services/storage'
 import { subscribeWithSelector } from 'zustand/middleware'
+import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 
 const defaultSettings: Settings = {
 	mainOutputVol: 100,
@@ -18,7 +19,8 @@ const defaultSettings: Settings = {
 		toggleLoop: ''
 	},
 	soundDatabases: [],
-	currentDatabase: 'default'
+	currentDatabase: 'default',
+	discord: true,
 }
 
 export interface SettingsStore {
@@ -60,3 +62,14 @@ export const useSettingsStore = create<SettingsStore>()(
 )
 
 useSettingsStore.getState().loadSettings()
+
+useSettingsStore.subscribe(
+	(state) => state.settings.discord,
+	(discord) => {
+		if (discord) {
+			window.api.startDiscordRPC()
+		} else {
+			window.api.stopDiscordRPC()
+		}
+	}
+)

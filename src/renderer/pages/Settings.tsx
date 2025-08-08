@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card'
 import { HotkeySettings } from '@/components/settings/HotkeySettings'
 import { DatabaseSettings } from '@/components/settings/DatabaseSettings'
 import { AudioSettings } from '@/components/settings/AudioSettings'
+import { OptionSettings } from '@/components/settings/OptionsSettings'
+import { Separator } from '@/components/ui/separator'
 
 export function Settings(): React.JSX.Element {
 	return (
@@ -17,6 +19,8 @@ export function Settings(): React.JSX.Element {
 						<div className="flex flex-col gap-2 max-w-md p-2">
 							<HotkeySettings />
 							<DatabaseSettings />
+							<Separator/>
+							<OptionSettings />
 						</div>
 					</TabsContent>
 					<TabsContent value="audio">
