@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { Settings } from '@/types'
 import { dataStore } from '@/services/storage'
 import { subscribeWithSelector } from 'zustand/middleware'
-import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 
 const defaultSettings: Settings = {
 	mainOutputVol: 100,
@@ -20,7 +19,7 @@ const defaultSettings: Settings = {
 	},
 	soundDatabases: [],
 	currentDatabase: 'default',
-	discord: true,
+	discord: true
 }
 
 export interface SettingsStore {
