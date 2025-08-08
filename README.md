@@ -1,5 +1,8 @@
 # Chimer
 
+<img width="847" height="540" alt="program" src="https://github.com/user-attachments/assets/d17d5039-f2a4-4e0d-b58d-b89ff02cd923" />
+<br>
+<br>
 A simple soundboard with dual-output, that allows you to preview and download sounds from youtube.
 
 ## Features
@@ -7,13 +10,13 @@ A simple soundboard with dual-output, that allows you to preview and download so
 - 🎵 **Audio Playback**: Play multiple audio formats (MP3, WAV, OGG)
 - 🎛️ **Dual Output**: Support for main and auxiliary audio outputs
 - ⌨️ **Global Hotkeys**: Assign keyboard shortcuts to sounds and actions
-- 📁 **Sound Management**: Organize sounds into custom groups to reduce Ui clutter
+- 📁 **Sound Manag
+ement**: Organize sounds into custom groups to reduce Ui clutter
 - 💾 **Database System**: Save and load sound and group collections
 - 🔄 **Drag & Drop**: Reorder sounds drag and drop
 - 🌐 **YouTube Integration**: Download audio from YouTube videos
 - 🎨 **Modern UI**: Uses Shadcn/ui components
 
-## Screenshots
 
 ## Installation
 
