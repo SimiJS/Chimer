@@ -1,6 +1,6 @@
 {
 	"name": "chimer",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A modern soundboard application built with Electron, React, and TypeScript",
 	"main": "./out/main/index.js",
 	"author": "Simão Correia <simi.git@outlook.com>",
