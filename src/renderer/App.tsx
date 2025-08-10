@@ -2,7 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, Route, Routes, useNavigate } from 'react-router'
 import { ThemeProvider } from './providers/ThemeProvider'
-import { useSound } from '@/hooks/useStores'
+import { useSettings, useSound } from '@/hooks/useStores'
 import { Settings } from './pages/Settings'
 import '@/assets/styles/index.css'
 import Home from './pages/Home'
@@ -21,10 +21,17 @@ import {
 	Repeat,
 	Rewind,
 	SettingsIcon,
+	Volume,
+	Volume1,
+	Volume2,
 	X
 } from 'lucide-react'
 import { Downloader } from './pages/Download'
 import { useSettingsStore } from './stores/settingsStore'
+import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover'
+import { Label } from './components/ui/label'
+import { Separator } from './components/ui/separator'
+import { Slider } from './components/ui/slider'
 
 window.name = 'Chimer'
 
@@ -44,11 +51,6 @@ const routes: Page[] = [
 		element: <Downloader />,
 		path: '/download',
 		bar: { showBar: true, icon: <Download /> }
-	},
-	{
-		element: <Settings />,
-		path: '/settings',
-		bar: { showBar: true, icon: <SettingsIcon /> }
 	}
 ]
 
@@ -65,6 +67,8 @@ function ShadBar({ routes }: { routes: Page[] }) {
 		forwardSound,
 		rewindSound
 	} = useSound()
+
+	const { settings, updateSettings } = useSettings()
 
 	const handlePinToggle = async () => {
 		const newPinState = await window.api.pinWindow()
@@ -100,6 +104,46 @@ function ShadBar({ routes }: { routes: Page[] }) {
 							</Button>
 						)
 				)}
+				<Popover>
+					<PopoverTrigger>
+						<Button variant="outline" className="size-8" size="icon">
+							{settings.mainOutputVol === 0 ? (
+								<Volume />
+							) : settings.mainOutputVol > 0 && settings.mainOutputVol < 50 ? (
+								<Volume1 />
+							) : (
+								<Volume2 />
+							)}
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="ml-4 mt-2">
+						<Label>Main: {settings.mainOutputVol}%</Label>
+						<Slider
+							className="mt-2"
+							value={settings.mainOutputVol[0]}
+							onValueChange={([val]) => updateSettings({ mainOutputVol: val })}
+							defaultValue={[settings.mainOutputVol]}
+							min={0}
+							max={100}
+							step={1}
+						/>
+						{settings.enableAuxOutput && (
+							<>
+								<Separator className="my-4 bg-zinc-700" />
+								<Label>Aux: {settings.auxOutputVol}%</Label>
+								<Slider
+									className="mt-2"
+									value={settings.auxOutputVol[0]}
+									onValueChange={([val]) => updateSettings({ auxOutputVol: val })}
+									defaultValue={[settings.auxOutputVol]}
+									min={0}
+									max={100}
+									step={1}
+								/>
+							</>
+						)}
+					</PopoverContent>
+				</Popover>
 			</div>
 			{currentSound ? (
 				<div className="inline-flex py-0.5 pl-2 pr-0.5 flex-row items-center gap-2 border rounded-md max-w-[50%] min-w-0">
@@ -145,6 +189,15 @@ function ShadBar({ routes }: { routes: Page[] }) {
 			)}
 			<div className="inline-flex flex-row items-center gap-2">
 				<Button
+					variant="outline"
+					className="size-8"
+					size="icon"
+					onClick={() => navigate('/settings')}
+				>
+					<SettingsIcon />
+				</Button>
+
+				<Button
 					variant={'outline'}
 					className={`size-8 ${isPinned ? 'enabled' : ''}`}
 					size="icon"
@@ -188,6 +241,7 @@ createRoot(document.getElementById('root')!).render(
 							element={route.element}
 						/>
 					))}
+					<Route path="/settings" element={<Settings />} />
 				</Routes>
 			</HashRouter>
 			<Toaster />
