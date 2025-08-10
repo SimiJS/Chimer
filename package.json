@@ -38,7 +38,8 @@
 				{
 					"target": "nsis",
 					"arch": [
-						"x64"
+						"x64",
+						"arm64"
 					]
 				}
 			],
@@ -52,20 +53,11 @@
 						"x64",
 						"arm64"
 					]
-				},
-				{
-					"target": "zip",
-					"arch": [
-						"x64",
-						"arm64"
-					]
 				}
 			],
-			"artifactName": "${productName}-${version}.${ext}",
-			"compression": "store"
+			"artifactName": "${productName}-${version}.${ext}"
 		},
 		"dmg": {
-			"compression": "store",
 			"format": "ULFO"
 		},
 		"linux": {
@@ -73,7 +65,8 @@
 				{
 					"target": "AppImage",
 					"arch": [
-						"x64"
+						"x64",
+						"arm64"
 					]
 				}
 			],
