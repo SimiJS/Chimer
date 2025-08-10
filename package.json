@@ -52,9 +52,21 @@
 						"x64",
 						"arm64"
 					]
+				},
+				{
+					"target": "zip",
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				}
 			],
-			"artifactName": "${productName}-${version}.${ext}"
+			"artifactName": "${productName}-${version}.${ext}",
+			"compression": "store"
+		},
+		"dmg": {
+			"compression": "store",
+			"format": "ULFO"
 		},
 		"linux": {
 			"target": [

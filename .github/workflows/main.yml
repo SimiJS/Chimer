@@ -39,10 +39,18 @@ jobs:
             - run: npm run build
               env:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
+                        - name: Free disk space
+              run: |
+                  sudo rm -rf /System/Library/Templates/Data/Users/Shared/SC\ Info
+                  sudo rm -rf /usr/share/dotnet
+                  sudo rm -rf /opt/ghc
+                  sudo rm -rf /usr/local/share/boost
+                  df -h
             - run: npx electron-builder --mac --publish=always
               env:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  CSC_IDENTITY_AUTO_DISCOVERY: false
 
     release-linux:
         runs-on: ubuntu-latest

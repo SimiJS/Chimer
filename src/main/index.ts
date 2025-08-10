@@ -1,14 +1,18 @@
-import { app, shell, BrowserWindow, ipcMain, autoUpdater } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { ipcHandlers } from './apis'
+import { autoUpdater } from 'electron-updater'
 
 function startupChecks() {
-	autoUpdater.checkForUpdates()
-	autoUpdater.on('update-available', () => {
-		autoUpdater.quitAndInstall()
-	})
+	if (!is.dev) {
+		autoUpdater.checkForUpdatesAndNotify()
+
+		autoUpdater.on('update-downloaded', () => {
+			autoUpdater.quitAndInstall()
+		})
+	}
 
 	const gotTheLock = app.requestSingleInstanceLock()
 	if (!gotTheLock) {
@@ -16,7 +20,7 @@ function startupChecks() {
 		return
 	}
 
-	app.on('second-instance', (_event, _commandLine) => {
+	app.on('second-instance', () => {
 		const win = BrowserWindow.getAllWindows()[0]
 		if (win) {
 			if (win.isMinimized()) win.restore()
