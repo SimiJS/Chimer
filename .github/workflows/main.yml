@@ -12,13 +12,14 @@ permissions:
 jobs:
     release-windows:
         runs-on: windows-latest
-        timeout-minutes: 20
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
                   node-version: 22
-            - run: npm install --silent
+                  cache: 'npm'
+            - run: npm ci
             - run: npm run build
               env:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
@@ -29,17 +30,18 @@ jobs:
 
     release-macos:
         runs-on: macos-latest
-        timeout-minutes: 20
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
                   node-version: 22
-            - run: npm install --silent
+                  cache: 'npm'
+            - run: npm ci
             - run: npm run build
               env:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
-                        - name: Free disk space
+            - name: Free disk space
               run: |
                   sudo rm -rf /System/Library/Templates/Data/Users/Shared/SC\ Info
                   sudo rm -rf /usr/share/dotnet
@@ -54,13 +56,14 @@ jobs:
 
     release-linux:
         runs-on: ubuntu-latest
-        timeout-minutes: 20
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
                   node-version: 22
-            - run: npm install --silent
+                  cache: 'npm'
+            - run: npm ci
             - run: npm run build
               env:
                   VITE_TENOR_KEY: ${{ secrets.VITE_TENOR_KEY }}
