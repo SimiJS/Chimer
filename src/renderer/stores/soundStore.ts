@@ -5,23 +5,20 @@ import { Sound, Group, GroupSelection, Settings, Database } from '@/types'
 import { useSettingsStore } from './settingsStore'
 import { dataStore } from '@/services/storage'
 import { DatabaseService } from '@/services/databaseService'
+import { audioEngine } from './audioEngine'
 
 // Cache management constants
 const MAX_CACHE_SIZE = 100 // Maximum number of cached items
 const CACHE_CLEANUP_THRESHOLD = 0.8 // Clean when 80% full
 
-interface PlayState {
-	promise: Promise<void>
-	controller: AbortController
-}
-
-let currentPlayState: PlayState | null = null
+// Legacy PlayState removed; AudioEngine handles playback lifecycle
 
 export interface AudioState {
 	currentSound: Sound | null
 	isPlaying: boolean
 	isLooping: boolean
 	isPaused: boolean
+	rate: number
 }
 
 export interface SoundStore {
@@ -31,11 +28,7 @@ export interface SoundStore {
 	groups: Group[]
 	selectedGroup: GroupSelection
 
-	// Audio Refs (directly accessing these may break synchronization)
-	audioRef: HTMLAudioElement | null
-	auxAudioRef: HTMLAudioElement | null
-
-	// Caches
+	// Caches (blob URL only)
 	soundCache: Map<string, string>
 	imageCache: Map<string, string>
 
@@ -65,6 +58,9 @@ export interface SoundStore {
 	toggleMute: () => void
 	rewindSound: () => void
 	forwardSound: () => void
+	changeRate: (rate: number) => void
+
+	parseSoundSource: (sound: Sound) => Promise<string>
 
 	// Utility Actions
 	getImage: (imageSrc: string) => Promise<string | undefined>
@@ -102,11 +98,10 @@ export const useSoundStore = create<SoundStore>()(
 			currentSound: null,
 			isPlaying: false,
 			isLooping: false,
-			isPaused: false
+			isPaused: false,
+			rate: 100 // percent (100 = 1.00x)
 		},
 
-		audioRef: null,
-		auxAudioRef: null,
 		soundCache: new Map(),
 		imageCache: new Map(),
 
@@ -190,256 +185,142 @@ export const useSoundStore = create<SoundStore>()(
 
 		// Main AudioEngine Actions
 		startEngine: () => {
-			if (!get().audioRef) {
-				const audioRef = new Audio()
-				const auxAudioRef = new Audio()
-
-				// Add ended event listener with cleanup tracking
-				const endedHandler = () => {
-					set((state) => ({
-						audio: {
-							...state.audio,
-							currentSound: null,
-							isPlaying: false
-						}
-					}))
-				}
-
-				audioRef.addEventListener('ended', endedHandler)
-
-				// Store cleanup function for later use
-				;(audioRef as any).__endedHandler = endedHandler
-
-				set({ audioRef, auxAudioRef })
-			}
+			audioEngine.onEnded(() => {
+				set((state) => ({
+					audio: { ...state.audio, currentSound: null, isPlaying: false }
+				}))
+			})
 		},
 
 		playSound: async (sound) => {
 			if (!sound.soundSrc) return
-
-			// Cancel any existing play operation
-			if (currentPlayState) {
-				currentPlayState.controller.abort()
-				currentPlayState = null
-			}
-
-			const { stopSound, audioRef, auxAudioRef, soundCache, audio } = get()
-			const abortController = new AbortController()
-
-			stopSound()
-
-			// Create and store the new promise
-			const playPromise = (async () => {
-				if (abortController.signal.aborted) throw new DOMException('Aborted', 'AbortError')
-
-				let audioUrl = soundCache.get(sound.soundSrc)
-				if (!audioUrl) {
-					const fileData = await window.api.readData(sound.soundSrc)
-					if (!fileData.success) {
-						toast.error(fileData.message)
-						return
-					}
-					if (abortController.signal.aborted)
-						throw new DOMException('Aborted', 'AbortError')
-
-					audioUrl = URL.createObjectURL(new Blob([new Uint8Array(fileData.data)]))
-					cleanOldCacheEntries(soundCache)
-					soundCache.set(sound.soundSrc, audioUrl)
-				}
-
-				const audioElements = [audioRef, auxAudioRef].filter(Boolean) as HTMLAudioElement[]
-
-				await Promise.all(
-					audioElements.map(async (audioEl) => {
-						if (abortController.signal.aborted)
-							throw new DOMException('Aborted', 'AbortError')
-
-						audioEl.volume
-						audioEl.src = audioUrl!
-						audioEl.loop = audio.isLooping
-						audioEl.load()
-						await audioEl.play()
-					})
-				)
-
-				if (abortController.signal.aborted) throw new DOMException('Aborted', 'AbortError')
-
-				set((state) => ({
-					audio: {
-						...state.audio,
-						currentSound: sound,
-						isPlaying: true
-					}
-				}))
-			})()
-
-			currentPlayState = { promise: playPromise, controller: abortController }
-
 			try {
-				await playPromise
-			} catch (error) {
-				// Only show errors that aren't from cancellation/abort
-				if (error instanceof Error && error.name !== 'AbortError') {
-					console.error('Failed to play sound:', error)
-					throw error
-				}
-			} finally {
-				// Clear the promise when done
-				if (currentPlayState?.controller === abortController) {
-					currentPlayState = null
-				}
+				const path = await get().parseSoundSource(sound)
+				await audioEngine.play(path, get().audio.isLooping)
+				set((state) => ({
+					audio: { ...state.audio, currentSound: sound, isPlaying: true }
+				}))
+			} catch (e) {
+				toast.error('Failed to play sound')
+				console.error(e)
 			}
 		},
 
 		previewSound: async (sound) => {
-			const { audioRef, audio, stopSound } = get()
-
+			const { audio, stopSound } = get()
 			if (audio.currentSound?.id === sound.id) {
 				stopSound()
 				return
 			}
-
 			stopSound()
-
 			try {
-				if (audioRef) {
-					audioRef.src = sound.soundSrc
-					audioRef.currentTime = 0
-					audioRef.loop = false
-					await audioRef.play()
-
-					set((state) => ({
-						audio: {
-							...state.audio,
-							currentSound: sound,
-							isPlaying: true
-						}
-					}))
-				}
-			} catch (error) {
-				console.error('Failed to preview sound:', error)
-				throw error
+				const path = await get().parseSoundSource(sound)
+				await audioEngine.play(path, false)
+				set((state) => ({
+					audio: { ...state.audio, currentSound: sound, isPlaying: true }
+				}))
+			} catch (e) {
+				console.error('Failed to preview sound', e)
+				toast.error('Preview failed')
 			}
 		},
 
 		previewYoutube: async (sound: Sound) => {
-			const { audioRef, audio, stopSound, soundCache } = get()
-
+			const { audio, stopSound, soundCache } = get()
 			stopSound()
-			if (audio.currentSound?.id === sound.id) {
-				return
-			}
-
-			let soundSrc = sound.soundSrc
-			if (soundCache.has(sound.id)) {
-				soundSrc = soundCache.get(sound.id) ?? sound.soundSrc
-			} else {
+			if (audio.currentSound?.id === sound.id) return
+			let soundPath = sound.soundSrc
+			if (!soundCache.has(sound.id)) {
 				const audioData = await window.api.previewYoutube(sound.soundSrc)
-				soundSrc = URL.createObjectURL(
+				const blobUrl = URL.createObjectURL(
 					new Blob([new Uint8Array(audioData)], { type: 'audio/mpeg' })
 				)
-			}
-
-			try {
-				if (audioRef) {
-					audioRef.src = soundSrc
-					audioRef.currentTime = 0
-					audioRef.loop = false
-					await audioRef.play()
-
-					set((state) => ({
-						audio: {
-							...state.audio,
-							currentSound: sound,
-							isPlaying: true
-						}
-					}))
-				}
-			} catch (error) {
-				console.error('Failed to preview sound:', error)
-				throw error
-			}
-			if (!soundCache.has(sound.id)) {
 				cleanOldCacheEntries(soundCache)
-				soundCache.set(sound.id, soundSrc)
+				soundCache.set(sound.id, blobUrl)
+				soundPath = blobUrl
+			} else {
+				soundPath = soundCache.get(sound.id) || sound.soundSrc
+			}
+			try {
+				await audioEngine.play(soundPath, false)
+				set((state) => ({
+					audio: { ...state.audio, currentSound: sound, isPlaying: true }
+				}))
+			} catch (e) {
+				console.error('Failed to preview youtube', e)
+				toast.error('Preview failed')
 			}
 		},
 
 		stopSound: () => {
-			const { audioRef, auxAudioRef } = get()
-
-			;[audioRef, auxAudioRef].filter(Boolean).forEach((audioEl) => {
-				audioEl!.pause()
-				audioEl!.currentTime = 0
-				audioEl!.src = ''
-			})
-
-			set((state) => ({
-				audio: {
-					...state.audio,
-					currentSound: null,
-					isPlaying: false
-				}
-			}))
+			audioEngine.stop()
+			set((state) => ({ audio: { ...state.audio, currentSound: null, isPlaying: false } }))
 		},
 
 		togglePause: () => {
-			const { audioRef, auxAudioRef, audio } = get()
-
+			const { audio } = get()
 			if (!audio.currentSound) return
-
-			const audioElements = [audioRef, auxAudioRef].filter(Boolean) as HTMLAudioElement[]
-			const isPaused = audioRef?.paused ?? true
-
-			if (isPaused) {
-				audioElements.forEach((audioEl) => audioEl.play().catch(console.error))
-				set((state) => ({ audio: { ...state.audio, isPlaying: true } }))
-			} else {
-				audioElements.forEach((audioEl) => audioEl.pause())
+			if (audioEngine.isPlaying()) {
+				audioEngine.pause()
 				set((state) => ({ audio: { ...state.audio, isPlaying: false } }))
+			} else {
+				audioEngine.resume()
+				set((state) => ({ audio: { ...state.audio, isPlaying: true } }))
 			}
 		},
 
 		toggleLoop: () => {
-			const { audioRef, auxAudioRef, audio } = get()
-			const newLoop = !audio.isLooping
-
-			;[audioRef, auxAudioRef].filter(Boolean).forEach((audioEl) => {
-				audioEl!.loop = newLoop
-			})
-
-			set((state) => ({
-				audio: { ...state.audio, isLooping: newLoop }
-			}))
+			const newLoop = !get().audio.isLooping
+			audioEngine.setLooping(newLoop)
+			set((state) => ({ audio: { ...state.audio, isLooping: newLoop } }))
 		},
 
 		toggleMute: () => {
-			const { audioRef, auxAudioRef } = get()
-			const newMuted = !audioRef?.muted
-
-			;[audioRef, auxAudioRef].filter(Boolean).forEach((audioEl) => {
-				audioEl!.muted = newMuted
-			})
+			const muted = (audioEngine as any)._muted
+			;(audioEngine as any)._muted = !muted
+			const factor = (audioEngine as any)._muted ? 0 : 1
+			;(audioEngine as any).mainOutputGain.gain.value = factor
+			;(audioEngine as any).auxOutputGain.gain.value = (audioEngine as any).auxEnabled
+				? factor
+				: 0
 		},
 
 		rewindSound: () => {
-			const { audioRef, auxAudioRef } = get()
-			if (audioRef) {
-				const newTime = Math.max(0, audioRef.currentTime - 5)
-				;[audioRef, auxAudioRef].filter(Boolean).forEach((audioEl) => {
-					audioEl!.currentTime = newTime
-				})
-			}
+			audioEngine.rewind(5)
 		},
 
 		forwardSound: () => {
-			const { audioRef, auxAudioRef } = get()
-			if (audioRef) {
-				const duration = audioRef.duration || 0
-				const newTime = Math.min(duration, audioRef.currentTime + 5)
-				;[audioRef, auxAudioRef].filter(Boolean).forEach((audioEl) => {
-					audioEl!.currentTime = newTime
-				})
+			audioEngine.forward(5)
+		},
+
+		changeRate: (percent: number) => {
+			audioEngine.setPlaybackRatePercent(percent)
+			set((state) => ({
+				audio: { ...state.audio, rate: audioEngine.getPlaybackRatePercent() }
+			}))
+		},
+
+		// Decide whether we use cache, pass it raw, or read from main proc
+		parseSoundSource: async (sound: Sound): Promise<string> => {
+			let src = sound.soundSrc
+			if (!src) return ''
+			if (src.startsWith('blob:') || src.startsWith('http')) return src
+			const cache = get().soundCache
+			if (cache.has(src)) {
+				return cache.get(src)!
+			}
+			try {
+				const fileData = await window.api.readData(src)
+				if (!fileData.success) throw new Error(fileData.message)
+				const blobUrl = URL.createObjectURL(
+					new Blob([new Uint8Array(fileData.data)], { type: 'audio/ogg' })
+				)
+				cleanOldCacheEntries(cache)
+				cache.set(src, blobUrl)
+				return blobUrl
+			} catch (err) {
+				console.error('Failed to cache sound path, falling back to direct path', err)
+				return src
 			}
 		},
 
@@ -482,17 +363,8 @@ export const useSoundStore = create<SoundStore>()(
 		},
 
 		updateAudioSettings: (settings: Settings) => {
-			const { audioRef, auxAudioRef } = get()
-
-			if (audioRef) {
-				audioRef.volume = Math.min((settings.mainOutputVol / 100) * 1.25, 1)
-				audioRef.setSinkId?.(settings.mainOutputDeviceId).catch(console.error)
-			}
-
-			if (settings.enableAuxOutput && auxAudioRef && settings.auxOutputDeviceId) {
-				auxAudioRef.volume = Math.min((settings.auxOutputVol / 100) * 1.25, 1)
-				auxAudioRef.setSinkId?.(settings.auxOutputDeviceId).catch(console.error)
-			}
+			audioEngine.setAuxEnabled(settings.enableAuxOutput)
+			audioEngine.setOutputVolumes(settings.mainOutputVol, settings.auxOutputVol)
 		},
 
 		loadDatabase: (data: Database) => {

@@ -16,6 +16,7 @@ import {
 	HomeIcon,
 	Minus,
 	Pause,
+	Piano,
 	Pin,
 	Play,
 	Repeat,
@@ -65,7 +66,9 @@ function ShadBar({ routes }: { routes: Page[] }) {
 		togglePause,
 		stopSound,
 		forwardSound,
-		rewindSound
+		rewindSound,
+		changeRate,
+		rate
 	} = useSound()
 
 	const { settings, updateSettings } = useSettings()
@@ -105,7 +108,7 @@ function ShadBar({ routes }: { routes: Page[] }) {
 						)
 				)}
 				<Popover>
-					<PopoverTrigger>
+					<PopoverTrigger asChild>
 						<Button variant="outline" className="size-8" size="icon">
 							{settings.mainOutputVol === 0 ? (
 								<Volume />
@@ -142,6 +145,26 @@ function ShadBar({ routes }: { routes: Page[] }) {
 								/>
 							</>
 						)}
+					</PopoverContent>
+				</Popover>
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button variant="outline" className="size-8" size="icon">
+							<Piano />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="ml-4 mt-2">
+						{/* Pitch (Playback Rate). Internal 'rate' kept as integer percent (100 = 1.00x) */}
+						<Label>Pitch: {(rate / 100).toFixed(2)}x</Label>
+						<Slider
+							className="mt-2"
+							value={[rate]}
+							onValueChange={([val]) => changeRate(val)}
+							defaultValue={[rate]}
+							min={50} /* 0.50x */
+							max={200} /* 2.00x */
+							step={1} /* 0.01x increments */
+						/>
 					</PopoverContent>
 				</Popover>
 			</div>

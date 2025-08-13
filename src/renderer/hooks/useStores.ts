@@ -38,6 +38,7 @@ export function useSound() {
 		currentSound: store.audio.currentSound,
 		isPlaying: store.audio.isPlaying,
 		isLooping: store.audio.isLooping,
+		rate: store.audio.rate,
 
 		// Data actions
 		setSounds: store.setSounds,
@@ -61,6 +62,7 @@ export function useSound() {
 		toggleMute: store.toggleMute,
 		rewindSound: store.rewindSound,
 		forwardSound: store.forwardSound,
+		changeRate: store.changeRate,
 
 		// Utilities
 		getImage,
