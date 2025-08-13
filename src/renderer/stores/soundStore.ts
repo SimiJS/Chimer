@@ -365,6 +365,7 @@ export const useSoundStore = create<SoundStore>()(
 		updateAudioSettings: (settings: Settings) => {
 			audioEngine.setAuxEnabled(settings.enableAuxOutput)
 			audioEngine.setOutputVolumes(settings.mainOutputVol, settings.auxOutputVol)
+			audioEngine.setOutputDeviceIds(settings.mainOutputDeviceId, settings.auxOutputDeviceId)
 		},
 
 		loadDatabase: (data: Database) => {
