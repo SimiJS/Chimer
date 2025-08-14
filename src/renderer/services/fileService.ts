@@ -8,6 +8,7 @@ export class FileService {
 	static async selectAudioFiles(): Promise<Status> {
 		try {
 			const result = await window.api.openDialog({
+				properties: ['openFile', 'multiSelections'],
 				filters: [
 					{
 						extensions: ['mp3', 'wav', 'ogg'],

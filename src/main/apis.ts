@@ -99,8 +99,8 @@ export function ipcHandlers(): void {
 				}
 				return {
 					success: true,
-					message: 'File selected successfully.',
-					data: file.filePaths[0]
+					message: 'Files selected successfully.',
+					data: file.filePaths
 				}
 			} catch (error) {
 				return {
